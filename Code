@@ -1,0 +1,72 @@
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+from scipy import stats
+
+# Dataset input:
+df = pd.read_csv('sales_data.csv')
+
+print("Info:")
+print(df.info())
+
+#Head:
+print("\nHead:")
+print(df.head())
+
+#Tail:
+print("\nTail:")
+print(df.tail())
+
+#Shape:
+print("\nShape:")
+print(df.shape)
+
+#Columns:
+print("\nColumns:")
+print(df.columns)
+
+#Duplicate rows:
+print("\nDuplicate Rows:")
+duplicate_rows = df[df.duplicated()]
+print(duplicate_rows)
+
+#Variables with null values:
+print("\nVariables with Null Values:")
+print(df.isnull().sum())
+
+#Impute null values
+#For numerical variables, impute with mean
+numerical_columns = df.select_dtypes(include=[np.number]).columns.tolist()
+for col in numerical_columns:
+    df[col].fillna(df[col].mean(), inplace=True)
+
+#For categorical variables, impute with mode
+categorical_columns = df.select_dtypes(exclude=[np.number]).columns.tolist()
+for col in categorical_columns:
+    df[col].fillna(df[col].mode()[0], inplace=True)
+
+# Drop columns
+columns_to_drop = ['Column1', 'Column2']  # Define columns to drop based on some rule
+columns_to_drop_existing = [col for col in columns_to_drop if col in df.columns]
+df.drop(columns_to_drop_existing, axis=1, inplace=True)
+
+# Treat categorical and numerical differently
+# Categorical
+categorical_columns = df.select_dtypes(exclude=[np.number]).columns.tolist()
+
+# Numerical
+numerical_columns = df.select_dtypes(include=[np.number]).columns.tolist()
+
+#P-values:
+for col in numerical_columns:
+    p_value = stats.normaltest(df[col])[1]
+    if p_value < 0.05:  # Reject null hypothesis that data is normally distributed
+        print(f"Column '{col}' is not normally distributed (p-value: {p_value})")
+
+#Representation
+correlation_matrix = df.corr()
+plt.figure(figsize=(10, 8))
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt=".2f", linewidths=0.5)
+plt.title('Correlation Matrix', fontsize=16)
+plt.show()
